@@ -145,30 +145,32 @@ class BatteryTester:
         secs = time.time() - self.starttime
         self.x.append(secs)
         self.y.append(voltage)
-        if voltage > self.max_y:
-            self.max_y = voltage
+        self.min_y = min(self.min_y, voltage)
+        self.max_y = max(self.max_y, voltage)
         self.data.set_data(self.x, self.y)
         xlim = x_margin * (int(secs) / x_margin + 1)
         self.axes.set_xlim(0, xlim);
-        self.axes.set_ylim(0, self.max_y + y_margin);
+        self.axes.set_ylim(max(0, self.min_y - y_margin), self.max_y + y_margin)
         self.figure.canvas.draw()
         return True
 
     def clear_plot(self):
         self.axes.clear()
-        self.axes.set_xlabel("Time, sec");
-        self.axes.set_ylabel("Voltage, V");
+        self.axes.set_xlabel("Time, sec")
+        self.axes.set_ylabel("Voltage, V")
 
 
     def start_button_clicked(self, widget, data=None):
-        self.x = [0]
-        self.y = [self.instrument.get_voltage_mv() / 1000.0]
-        self.max_y = 0;
-        self.starttime = time.time()
-        self.clear_plot()
-        self.data = self.axes.plot(self.x, self.y , 'r-', linewidth = 2)[0]
-        self.file = open('battery_tester.csv', 'w') # TODO: add a dialog for file name
-        self.started = True
+        if not(self.started):
+            self.x = [0]
+            self.y = [self.instrument.get_voltage_mv() / 1000.0]
+            self.min_y = 1000000
+            self.max_y = 0
+            self.starttime = time.time()
+            self.clear_plot()
+            self.data = self.axes.plot(self.x, self.y , 'r-', linewidth = 2)[0]
+            self.file = open('battery_tester.csv', 'w') # TODO: add a dialog for file name
+            self.started = True
 
     def stop_button_clicked(self, widget, data=None):
         self.stop()
